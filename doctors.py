@@ -2,7 +2,7 @@ from XrayData import HeadXrayAnnos
 import numpy as np
 
 
-annos = HeadXrayAnnos("images/RawImage")
+annos = HeadXrayAnnos("/content/RawImage")
 
 errors=[]
 
