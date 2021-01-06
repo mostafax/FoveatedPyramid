@@ -10,8 +10,8 @@ import torchvision.transforms as transforms
 class HeadXrays(Dataset):
 
     def __init__(self, directory,junior=True):
-        self.anno_dir = os.path.join(directory, f"AnnotationsByMD")
-        img_dir = os.path.join(directory, "TrainingData")
+        self.anno_dir = os.path.join('/', "content/AnnotationsByMD")
+        img_dir = os.path.join("/", "content/RawImage/TrainingData")
         images = filter(lambda f: not f.startswith("."),os.listdir(img_dir))
 
         parse_id = lambda img: int(img.split(".bmp")[0])
@@ -97,7 +97,7 @@ class TransformedXrays(Transform):
         middle = np.array([1920, 2432]) / 2
 
         ty = lambda x: (x[landmarks] - middle) / 1920. * 2
-        path = "images/RawImage"
+        path = "/content/RawImage"
         if 'SLURM_TMPDIR' in os.environ:
             path = os.path.join(os.environ['SLURM_TMPDIR'],'RawImage')
         super().__init__(HeadXrays(path),indices = indices,tx=tx,ty=ty)
