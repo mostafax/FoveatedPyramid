@@ -172,7 +172,7 @@ if __name__=='__main__':
             all()
 
     else:
-        print(test([{'loadpath':"Models/test.pt"}],[11]).mean())
+        print(test([{'loadpath':"Models/test_avg_up.pt"}],[11]).mean())
 
 '''
 if __name__ == '__main__':
