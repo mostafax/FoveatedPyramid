@@ -10,12 +10,19 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 from time import time
 from math import pi
-import matplotlib
+import matplotlib.pyplot as plt
 import os
 import sys
 import copy
 import torch.nn.functional as F
 from pyramid import pyramid, stack, pyramid_transform
+from google.colab.patches import cv2_imshow
+import scipy.misc
+import imageio
+import cv2
+def show(img):
+   npimg = img.numpy()
+   plt.imshow(np.transpose(npimg, (1,2,0)), interpolation='nearest')
 
 def all():
     errors=[]
@@ -33,8 +40,11 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
 
 
     splits, datasets, dataloaders, annos = XrayData.get_folded(landmarks,batchsize=batchsize,fold=fold,num_folds=num_folds,fold_size=fold_size)
-
-
+    print(annos)
+    data_iter = iter(annos)
+    #print(data_iter)
+    #next_batch = annos.next()  # start loading the first batch
+    #print("dafd",next_batch)
 
     if avg_labels:
         pnts = np.stack(list(map(lambda x: (x[1]+x[2])/2, annos)))
@@ -103,7 +113,49 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
             for i in range(len(dataloaders[phase])):
                 batch = next_batch
                 inputs,junior_labels, senior_labels = batch
+                #print(inputs,"junior_labels",junior_labels.tolist()[0][0], "senior_labels",senior_labels.tolist()[0][0])
+                #middle = np.array([1920, 2432]) / 2
+                #ty = lambda x: (x[landmarks] - middle) / 1920. * 2          
+                x= junior_labels.tolist()[0][0][0]
+                y = junior_labels.tolist()[0][0][1]
+                #print(junior_labels.tolist()[0][0])
+                #print(junior_labels.cpu().numpy()[0][0])
+                #print(junior_labels.cpu().numpy()[0][0].shape)
+                #print(type(junior_labels.cpu().numpy()[0][0]))
+                #return 0
+                #print(x,y)
+                middle = np.array([1920, 2432]) / 2
+                dataa_j = (junior_labels.cpu().numpy()[0][0]) * 1920. / 2
+                dataa_j = dataa_j + middle
+                #print(dataa_j)
+                
+                middle = np.array([1920, 2432]) / 2
+                dataa_s = (senior_labels.cpu().numpy()[0][0]) * 1920. / 2
+                dataa_s = dataa_s + middle
+                #print(dataa_s)
+                                
+                
 
+                
+                #print(inputs.shape)
+                #print(junior_labels.shape)
+                #print(senior_labels.shape)
+                
+                saver = torch.squeeze(inputs,0)
+                #print(inputs.shape)
+                #print("********")
+                saver = torch.squeeze(saver,0)
+                #print(saver.shape)
+                #plt.imshow(  saver.cpu()  )
+                #cv2_imshow(saver.cpu().numpy())
+                #scipy.misc.imsave('outfile.jpg', )
+                #cv2.circle(saver.cpu().numpy(),(-0.1531, -0.1969), 6, (0,255,0), -1)
+                #cv2.circle(saver.cpu().numpy(),(-0.1427, -0.1802), 6, (0,255,0), -1)
+                #imageio.imwrite('filenameaslyyyy.jpg', saver.cpu().numpy())
+                #return 0
+                #show(inputs.cpu())
+                #np.savetxt('my_file.txt', saver.cpu().numpy())
+                
                 if i + 2 != len(dataloaders[phase]):
                     # start copying data of next batch
                     next_batch = data_iter.next()
@@ -111,13 +163,14 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
 
 
                 inputs_tensor = inputs.to(device)
-
+                #print(inputs_tensor)
+                
                 if avg_labels:
                     labels_tensor = torch.stack((junior_labels,senior_labels),dim=0).mean(0).to(device).to(torch.float32)
                 else:
                     labels_tensor = junior_labels.to(device).to(torch.float32)
                 # zero the parameter gradients
-
+                #print(inputs_tensor)
                 pym = pyramid(inputs_tensor, levels)
 
                 # forward
@@ -145,6 +198,9 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
                             optimizer.step()
 
                         guess = outputs.detach()
+                        #print(guess)
+                        #print(guess.shape)
+                        #return 0
                         #if phase=='train':
                             #guess+=torch.randn(guess.shape,device=device)*(max(8-j,0))/100
 
@@ -253,9 +309,9 @@ if __name__ == '__main__':
             fold = id//10
             pnt = id % 10 * 2
 
-            for i in range(pnt,min(pnt+2,19)):
+            for i in range(0,19):
                 print(f"Running fold {fold}, point {i}")
-                train(f"big_hybrid_{i}_{fold}", [i],batched=True,fold=fold,num_folds=4,fold_size=100,iterations=10,avg_labels=False)
+                train(f"big_hybrid_{i}_{fold}", [i],batched=True,fold=1,num_folds=2,fold_size=150,iterations=10,avg_labels=False)
         elif test==1:
             print("RUNNING SMALL TEST")
             fold = 1
