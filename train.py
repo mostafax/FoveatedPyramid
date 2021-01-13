@@ -309,9 +309,9 @@ if __name__ == '__main__':
             fold = id//10
             pnt = id % 10 * 2
 
-            for i in range(0,19):
+            for i in range(0,52):
                 print(f"Running fold {fold}, point {i}")
-                train(f"big_hybrid_{i}_{fold}", [i],batched=True,fold=1,num_folds=2,fold_size=150,iterations=10,avg_labels=False)
+                train(f"big_hybrid_{i}_{fold}", [i],batched=True,fold=1,num_folds=2,fold_size=300,iterations=10,avg_labels=False)
         elif test==1:
             print("RUNNING SMALL TEST")
             fold = 1
