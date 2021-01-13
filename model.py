@@ -164,7 +164,7 @@ def load_model(levels,name,load=False):
     model = PyramidAttention(levels)
 
     if load:
-        model.load_state_dict(torch.load(f"/content/drive/MyDrive/New_Model/Models/{name}.pt"))
+        model.load_state_dict(torch.load(f"/content/drive/MyDrive/New_Model_Our/Models/{name}.pt"))
 
     model.to('cuda')
     return model
@@ -172,4 +172,4 @@ def load_model(levels,name,load=False):
 def save_model(model, name):
     if not os.path.exists("Models"):
         os.mkdir("Models")
-    torch.save(model.state_dict(), f"/content/drive/MyDrive/New_Model/Models/{name}.pt")
+    torch.save(model.state_dict(), f"/content/drive/MyDrive/New_Model_Our/Models/{name}.pt")
