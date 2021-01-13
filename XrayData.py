@@ -4,14 +4,17 @@ from PIL import Image
 from torch.utils.data import Dataset
 import numpy as np
 import torchvision.transforms as transforms
-
+import json
 
 
 class HeadXrays(Dataset):
 
     def __init__(self, directory,junior=True):
-        self.anno_dir = os.path.join('/', "content/AnnotationsByMD")
-        img_dir = os.path.join("/", "content/RawImage/TrainingData")
+        self.json_file_name = "/content/drive/MyDrive/data/all_data.json"
+        self.root_dir = "/content/images/"
+        '''
+        self.anno_dir = os.path.join('/', "home/mostafa/work/Ceph-Model/AnnotationsByMD")
+        img_dir = os.path.join('/', "home/mostafa/work/Ceph-Model/RawImage/TrainingData")
         images = filter(lambda f: not f.startswith("."),os.listdir(img_dir))
 
         parse_id = lambda img: int(img.split(".bmp")[0])
@@ -20,6 +23,34 @@ class HeadXrays(Dataset):
 
         images.sort(key = lambda x: x[0])
         self.files = np.array([(os.path.join(img_dir,img[1]),) + self.loadAnnotations(img[0]) for img in images])
+        '''
+        with open('{}'.format(self.json_file_name)) as json_file:
+            self.landmarks = json.load(json_file)
+        #self.root_dir = root_dir
+        self.images_names = []
+        for idx in range(len(self.landmarks)):
+            self.images_names.append(os.path.join(self.root_dir,self.landmarks[idx]["imagePath"]))
+        all_points = []
+        list_of_points = []
+        for j in range(len(self.landmarks)):
+            landmarks = self.landmarks[j]["points"]
+            landmarks = sorted(landmarks, key=lambda k: k['pointName'])
+            list_of_points = []
+            for i in range(len(landmarks)):
+                list_of_points.append([landmarks[i]["X"], landmarks[i]["Y"]])
+            list_of_points = np.array([list_of_points])
+            list_of_points = list_of_points.astype('float').reshape(-1, 2)
+            all_points.append(list_of_points)
+        #print(len(all_points[0]))
+        #for i in range(len(l)):
+        all_data = []
+        for idx in range(len(self.landmarks)):
+            all_data.append([self.images_names[idx],all_points[idx],all_points[idx]])
+        self.files = np.array(all_data)    
+        #print(self.files[0])
+        #print(self.files.shape)
+        #return 0
+        #print(sorted(self.images_names))
 
 
     def loadAnnotations(self,id):
@@ -78,9 +109,9 @@ class TransformedHeadXrayAnnos(Transform):
     def __init__(self, indices, landmarks):
         tx = lambda x: x
 
-        middle = np.array([1920, 2432]) / 2
+        middle = np.array([1198, 1438]) / 2
 
-        ty = lambda x: (x[landmarks] - middle) / 1920. * 2
+        ty = lambda x: (x[landmarks] - middle) / 1198. * 2
         path = "images/RawImage"
         if 'SLURM_TMPDIR' in os.environ:
             path = os.path.join(os.environ['SLURM_TMPDIR'],'RawImage')
@@ -91,12 +122,12 @@ class TransformedXrays(Transform):
         tx = transforms.Compose([
             transforms.Pad((0, 0, 0, 32)),
             transforms.ToTensor(),
-            lambda x: x[:, :, :1920].sum(dim=0, keepdim=True),
+            lambda x: x[:, :, :1198].sum(dim=0, keepdim=True),
             transforms.Normalize([1.4255656], [0.8835338])])
 
-        middle = np.array([1920, 2432]) / 2
+        middle = np.array([1198, 1438]) / 2
 
-        ty = lambda x: (x[landmarks] - middle) / 1920. * 2
+        ty = lambda x: (x[landmarks] - middle) / 1198. * 2
         path = "/content/RawImage"
         if 'SLURM_TMPDIR' in os.environ:
             path = os.path.join(os.environ['SLURM_TMPDIR'],'RawImage')
