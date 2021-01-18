@@ -13,6 +13,8 @@ import copy
 import torch.nn.functional as F
 from pyramid import pyramid, stack, pyramid_transform
 import sys
+import imageio
+
 
 def all():
     folds_errors = []
@@ -33,7 +35,7 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
     print("TEST")
 
 
-    batchsize=2
+    batchsize=1
     device = 'cuda'
 
     splits, datasets, dataloaders, _ = XrayData.get_folded(landmarks,batchsize=batchsize, fold=fold, num_folds=num_folds, fold_size=fold_size)
@@ -78,6 +80,18 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
     for i in range(len(dataloaders[phase])):
         batch = next_batch
         inputs, junior_labels, senior_labels = batch
+        saver = torch.squeeze(inputs,0)
+        #print(inputs.shape)
+        #print("********")
+        saver = torch.squeeze(saver,0)
+        print(saver.shape)
+        #print(saver.shape)
+        #plt.imshow(  saver.cpu()  )
+        #cv2_imshow(saver.cpu().numpy())
+        #scipy.misc.imsave('outfile.jpg', )
+        #cv2.circle(saver.cpu().numpy(),(-0.1531, -0.1969), 6, (0,255,0), -1)
+        #cv2.circle(saver.cpu().numpy(),(-0.1427, -0.1802), 6, (0,255,0), -1)
+        imageio.imwrite('filenameaslyyyy.jpg', saver.cpu().numpy())
 
 
         if i + 2 != len(dataloaders[phase]):
@@ -125,7 +139,7 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
             error = loss.detach().sum(dim=2).sqrt()
             errors.append(error)
             doc_errors.append(F.mse_loss(junior_labels, senior_labels, reduction='none').sum(dim=2).sqrt())
-
+        break
     errors = torch.cat(errors,0).detach().cpu().numpy()/2*192
     doc_errors = torch.cat(doc_errors,0).detach().cpu().numpy()/2*192
 
@@ -137,7 +151,7 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
         print(f"Error {i}: {all_error[i]} (doctor: {doc_error[i]}")
 
     print(f"{phase} loss: {error} (doctors: {doc_errors.mean()} in: {time() - start}")
-    return errors
+    return all_outputs[0].tolist()[0][0]
 
 
 
@@ -151,17 +165,19 @@ if __name__=='__main__':
             fold = 1
 
             errors = []
+            final_points = []
             run = 0
             from time import time
             rt = time()
-            for i in range(19):
+            for i in range(51):
                 settings = []
                 #for run in range(1,2):
-                path = f"Models/lil_hybrid_{i}_{run}.pt"
+                path = f"/content/drive/MyDrive/New_Model_Our/Models/big_hybrid_{i}_{run}.pt"
                 settings.append({'loadpath': path})
-                errors.append(test(settings, [i], fold=3,num_folds=4,fold_size=100))
-            all_errors = np.stack(errors)
-            folds_errors.append(all_errors)
+                final_points.append(test(settings, [i], fold=3,num_folds=4,fold_size=100))
+            print(final_points)
+            #all_errors = np.stack(errors)
+            #folds_errors.append(all_errors)
 
             all_folds_errors = np.stack(folds_errors)
             print(all_errors.mean())
@@ -201,4 +217,3 @@ if __name__ == '__main__':
     with open('results_ensemble.npz', 'wb') as f:
         np.savez(f, all_errors)
 '''
-
