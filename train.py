@@ -35,7 +35,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
     print(f"AVG? {avg_labels}, RMS? {rms}")
     print(f"BEGIN {name} {landmarks}")
     batchsize=2
-    num_epochs=40
+    num_epochs=10
     device = 'cuda'
 
 
@@ -156,10 +156,10 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
                 #show(inputs.cpu())
                 #np.savetxt('my_file.txt', saver.cpu().numpy())
                 
-                if i + 2 != len(dataloaders[phase]):
-                    # start copying data of next batch
-                    next_batch = data_iter.next()
-                    next_batch = [t.cuda(non_blocking=True) for t in next_batch]
+                #if i + 2 != len(dataloaders[phase]):
+                #    # start copying data of next batch
+                #    next_batch = data_iter.next()
+                #    next_batch = [t.cuda(non_blocking=True) for t in next_batch]
 
 
                 inputs_tensor = inputs.to(device)
@@ -309,9 +309,9 @@ if __name__ == '__main__':
             fold = id//10
             pnt = id % 10 * 2
 
-            for i in range(0,52):
+            for i in range(5,20):
                 print(f"Running fold {fold}, point {i}")
-                train(f"big_hybrid_{i}_{fold}", [i],batched=True,fold=1,num_folds=2,fold_size=300,iterations=10,avg_labels=False)
+                train(f"big_hybrid_{i}_{fold}", [i],batched=True,fold=1,num_folds=2,fold_size=450,iterations=10,avg_labels=False,load=True)
         elif test==1:
             print("RUNNING SMALL TEST")
             fold = 1
